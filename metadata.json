@@ -1,0 +1,5 @@
+{
+  "name": "GhostDrop 💀",
+  "description": "A dead man's switch vault. Encrypt files with AES-256-GCM, set a countdown, and check in daily. Miss a check-in and the vault drops.",
+  "requestFramePermissions": []
+}
