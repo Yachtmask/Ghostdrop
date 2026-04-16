@@ -331,7 +331,15 @@ async function startServer() {
             continue;
           }
 
-          const metadata = await response.json();
+          let metadata;
+          try {
+            const rawText = await response.text();
+            metadata = JSON.parse(rawText);
+          } catch (e) {
+            logs.push(`Failed to parse metadata blob ${blobName} as JSON.`);
+            continue;
+          }
+          
           const now = Date.now();
           
           for (const vault of metadata.vaults || []) {
@@ -391,7 +399,15 @@ async function startServer() {
             continue;
           }
 
-          const metadata = await response.json();
+          let metadata;
+          try {
+            const rawText = await response.text();
+            metadata = JSON.parse(rawText);
+          } catch (e) {
+            console.error(`Failed to parse metadata blob ${blobName} as JSON.`);
+            continue;
+          }
+          
           const now = Date.now();
           
           // Check each vault in the metadata
