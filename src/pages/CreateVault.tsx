@@ -211,9 +211,7 @@ const CreateVault = () => {
       await uploadBlobs({
         // @ts-ignore
         signer: { account, signAndSubmitTransaction },
-        blobs: finalBlobs,
-        // @ts-ignore
-        expirationMicros: BigInt(Date.now() * 1000 + 3650 * 24 * 3600 * 1_000_000), // 10 years
+        blobs: finalBlobs
       });
 
       // Register with Watchdog

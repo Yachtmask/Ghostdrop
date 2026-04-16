@@ -69,7 +69,8 @@ function App() {
         <AptosWalletAdapterProvider 
           {...({ wallets } as any)} 
           autoConnect={true}
-          dappConfig={{ network: Network.TESTNET }}
+          dappConfig={{ network: Network.TESTNET, aptosConnectDappId: 'ghostdrop' }}
+          optInFeatures={['signTransaction', 'signMessage']}
         >
           <Router>
             <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-blue-500/30 overflow-x-hidden">
