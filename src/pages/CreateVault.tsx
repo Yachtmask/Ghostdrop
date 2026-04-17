@@ -207,11 +207,32 @@ const CreateVault = () => {
     setProgressText('Uploading to Shelby...');
     
     try {
+      const safeSignAndSubmitTransaction = async (transaction: any) => {
+        const payload = { ...transaction };
+        if (payload?.data?.functionArguments) {
+          payload.data.functionArguments = payload.data.functionArguments.map((arg: any) => {
+            if (Array.isArray(arg)) {
+              return arg.map((item: any) => {
+                if (item instanceof Uint8Array) return Array.from(item);
+                if (typeof item === 'bigint') return item.toString();
+                return item;
+              });
+            }
+            if (arg instanceof Uint8Array) return Array.from(arg);
+            if (typeof arg === 'bigint') return arg.toString();
+            return arg;
+          });
+        }
+        return await signAndSubmitTransaction(payload);
+      };
+
       // Upload both blobs in a single transaction to preserve user gesture
       await uploadBlobs({
         // @ts-ignore
-        signer: { account, signAndSubmitTransaction },
-        blobs: finalBlobs
+        signer: { account, signAndSubmitTransaction: safeSignAndSubmitTransaction },
+        blobs: finalBlobs,
+        // @ts-ignore
+        expirationMicros: Math.floor(Date.now() * 1000) + (3650 * 24 * 3600 * 1000000)
       });
 
       // Register with Watchdog
