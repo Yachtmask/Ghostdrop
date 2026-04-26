@@ -9,6 +9,7 @@ import { Upload, Shield, CheckCircle2, Plus, Trash2, Clock } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { EncryptionService } from '../services/encryptionService';
 import { shelbyService } from '../services/shelbyService';
+import { defaultErasureCodingConfig, expectedTotalChunksets } from '@shelby-protocol/sdk/browser';
 
 import confetti from 'canvas-confetti';
 
@@ -252,10 +253,8 @@ const CreateVault = () => {
       for (const blob of finalBlobs) {
         console.log(`[UPLOAD] Processing blob: ${blob.blobName}, size: ${blob.blobData.length}`);
         
-        // Calculate expected chunksets for this blob
-        const { defaultErasureCodingConfig } = require('@shelby-protocol/sdk/browser');
+        // Calculate expected chunksets for this blob - using ES6 imports instead of require()
         const config = defaultErasureCodingConfig();
-        const { expectedTotalChunksets } = require('@shelby-protocol/sdk/browser');
         const numChunksets = expectedTotalChunksets(blob.blobData.length, config.chunkSizeBytes);
         
         console.log(`[UPLOAD] Blob ${blob.blobName}: size=${blob.blobData.length}, chunksets=${numChunksets}`);
