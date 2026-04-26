@@ -84,9 +84,20 @@ const CreateVault = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        toast.error('File size exceeds 50MB limit.');
-        return;
+      // Show warning if file is very large (500MB+) for UX, but allow upload
+      if (selectedFile.size > 500 * 1024 * 1024) {
+        toast((t) => (
+          <div>
+            <p className="font-bold mb-2">Large File Warning</p>
+            <p className="text-sm mb-3">This file is over 500MB. Upload may take significantly longer.</p>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="text-blue-400 hover:text-blue-300 text-sm"
+            >
+              OK, Continue Anyway
+            </button>
+          </div>
+        ), { duration: 10000 });
       }
       setFile(selectedFile);
       setIsPreparing(true);
@@ -151,7 +162,7 @@ const CreateVault = () => {
       const exportedKey = await EncryptionService.exportKey(preparedData.aesKey);
       const encryptedKeyPackage = await EncryptionService.encryptKeyForRecipient(exportedKey, passphrase);
 
-      const blobName = `${Date.now()}_${file.name}`;
+      const blobName = `ghostdrop/vault/encrypted.bin`;
 
       // 2. Prepare Metadata
       setProgressText('Preparing metadata...');
@@ -202,12 +213,17 @@ const CreateVault = () => {
 
   const handleUpload = async () => {
     if (!account) return toast.error("Connect wallet first");
+    if (!connected) return toast.error("Wallet not connected");
     
     setIsProcessing(true);
     setProgressText('Uploading to Shelby...');
     
     try {
+      console.log('[UPLOAD] Starting upload flow for account:', account.address.toString());
+      console.log('[UPLOAD] Blobs to upload:', finalBlobs.length);
+
       const safeSignAndSubmitTransaction = async (transaction: any) => {
+        console.log('[UPLOAD] Signing transaction...');
         const payload = { ...transaction };
         if (payload?.data?.functionArguments) {
           payload.data.functionArguments = payload.data.functionArguments.map((arg: any) => {
@@ -223,20 +239,46 @@ const CreateVault = () => {
             return arg;
           });
         }
-        return await signAndSubmitTransaction(payload);
+        const result = await signAndSubmitTransaction(payload);
+        console.log('[UPLOAD] Transaction signed:', result);
+        return result;
       };
 
-      // Upload both blobs in a single transaction to preserve user gesture
+      // Step 1: Generate commitments (already done in prepare)
+      console.log('[UPLOAD] Step 1: Commitments already generated');
+
+      // Step 2: Create registration payload and sign
+      console.log('[UPLOAD] Step 2: Creating registration payload and signing...');
+      for (const blob of finalBlobs) {
+        console.log(`[UPLOAD] Processing blob: ${blob.blobName}, size: ${blob.blobData.length}`);
+        
+        // Calculate expected chunksets for this blob
+        const { defaultErasureCodingConfig } = require('@shelby-protocol/sdk/browser');
+        const config = defaultErasureCodingConfig();
+        const { expectedTotalChunksets } = require('@shelby-protocol/sdk/browser');
+        const numChunksets = expectedTotalChunksets(blob.blobData.length, config.chunkSizeBytes);
+        
+        console.log(`[UPLOAD] Blob ${blob.blobName}: size=${blob.blobData.length}, chunksets=${numChunksets}`);
+      }
+
+      // Step 3: Upload both blobs in a single transaction to preserve user gesture
+      console.log('[UPLOAD] Step 3: Uploading blobs via uploadBlobs...');
+      const expirationMicros = (Date.now() + 1000 * 60 * 60 * 24 * 30) * 1000; // 30 days
+      console.log('[UPLOAD] Expiration (micros):', expirationMicros);
+
       await uploadBlobs({
         // @ts-ignore
         signer: { account, signAndSubmitTransaction: safeSignAndSubmitTransaction },
         blobs: finalBlobs,
         // @ts-ignore
-        expirationMicros: Math.floor(Date.now() * 1000) + (3650 * 24 * 3600 * 1000000)
+        expirationMicros
       });
+
+      console.log('[UPLOAD] Blobs uploaded successfully');
 
       // Register with Watchdog
       setProgressText('Registering with Watchdog...');
+      console.log('[UPLOAD] Registering with watchdog...');
       await fetch('/api/watch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,6 +289,7 @@ const CreateVault = () => {
         })
       });
 
+      console.log('[UPLOAD] Watchdog registration complete');
       toast.success('Vault created and secured successfully!');
       confetti({
         particleCount: 100,
@@ -255,7 +298,13 @@ const CreateVault = () => {
       });
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Finalization failed:', error);
+      console.error('[UPLOAD] Finalization failed:', error);
+      console.error('[UPLOAD] Full error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        stack: error.stack
+      });
       toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
       setIsFullyPrepared(false); // Reset so they can try again
     } finally {
@@ -300,7 +349,7 @@ const CreateVault = () => {
                 </div>
                 <div>
                   <p className="text-lg font-bold">{file ? file.name : 'Select or drag file'}</p>
-                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Max size 50MB'}</p>
+                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'No file size limit'}</p>
                 </div>
               </div>
             </div>
