@@ -25,7 +25,7 @@ To begin securing your legacy, you will need an Aptos wallet like Petra connecte
 
 1. **Connect Your Wallet**: Use the selector in the top right to link your Aptos account.
 2. **Configure Your Heartbeat**: Visit your settings to set your check in interval and notification email.
-3. **Create a Vault**: Upload any file up to 50MB. Add your recipients and let GhostDrop handle the encryption and decentralized storage.
+3. **Create a Vault**: Upload any file up to 1GB. Add your recipients and let GhostDrop handle the encryption and decentralized storage.
 4. **Stay Active**: Simply visit the dashboard and hit Check In to reset the timer.
 
 ## Pro Tips for the Ultimate Setup

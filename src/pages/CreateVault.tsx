@@ -19,8 +19,6 @@ const shelbyClient = new ShelbyClient({
 
 interface Recipient {
   email: string;
-  telegram: string;
-  aptosAddress: string;
 }
 
 const CreateVault = () => {
@@ -32,7 +30,7 @@ const CreateVault = () => {
   const [timerValue, setTimerValue] = useState(30);
   const [timerUnit, setTimerUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'months'>('days');
   const [passphrase, setPassphrase] = useState('');
-  const [recipients, setRecipients] = useState<Recipient[]>([{ email: '', telegram: '', aptosAddress: '' }]);
+  const [recipients, setRecipients] = useState<Recipient[]>([{ email: '' }]);
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -69,8 +67,8 @@ const CreateVault = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        toast.error('File size exceeds 50MB limit.');
+      if (selectedFile.size > 1024 * 1024 * 1024) {
+        toast.error('File size exceeds 1GB limit.');
         return;
       }
       setFile(selectedFile);
@@ -97,7 +95,7 @@ const CreateVault = () => {
   };
 
   const addRecipient = () => {
-    setRecipients([...recipients, { email: '', telegram: '', aptosAddress: '' }]);
+    setRecipients([...recipients, { email: '' }]);
   };
 
   const updateRecipient = (index: number, field: keyof Recipient, value: string) => {
@@ -261,7 +259,7 @@ const CreateVault = () => {
                 </div>
                 <div>
                   <p className="text-lg font-bold">{file ? file.name : 'Select or drag file'}</p>
-                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Max size 50MB'}</p>
+                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Max size 1GB'}</p>
                 </div>
               </div>
             </div>
@@ -340,22 +338,6 @@ const CreateVault = () => {
                     placeholder="Email Address (Required)"
                     value={recipient.email}
                     onChange={(e) => updateRecipient(index, 'email', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
-                    disabled={isProcessing}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Telegram Username (Optional)"
-                    value={recipient.telegram}
-                    onChange={(e) => updateRecipient(index, 'telegram', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
-                    disabled={isProcessing}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Aptos Wallet Address (Optional)"
-                    value={recipient.aptosAddress}
-                    onChange={(e) => updateRecipient(index, 'aptosAddress', e.target.value)}
                     className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
                     disabled={isProcessing}
                   />
