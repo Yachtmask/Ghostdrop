@@ -15,17 +15,10 @@ const Download = () => {
 
   useEffect(() => {
     // Extract key package from URL hash
-    // location.hash includes the '#' character
-    const hash = location.hash;
-    if (hash && hash.includes('key=')) {
-      const keyPart = hash.split('key=')[1];
-      // If there are other hash params, split them
-      const key = keyPart.split('&')[0];
-      if (key) {
-        setKeyPackage(decodeURIComponent(key));
-      } else {
-        setError("No key package found in URL. Please use the exact link from your notification.");
-      }
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    const key = hashParams.get('key');
+    if (key) {
+      setKeyPackage(key);
     } else {
       setError("No key package found in URL. Please use the exact link from your notification.");
     }

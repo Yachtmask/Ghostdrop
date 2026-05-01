@@ -2,7 +2,7 @@ import React from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { WalletSelector } from '@aptos-labs/wallet-adapter-ant-design';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, Ghost, User, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Ghost, User } from 'lucide-react';
 
 const Navbar = () => {
   const { connected } = useWallet();
@@ -12,7 +12,6 @@ const Navbar = () => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, show: connected },
     { name: 'Upload', path: '/create', icon: PlusCircle, show: connected },
     { name: 'Settings', path: '/settings', icon: User, show: connected },
-    { name: 'FAQ', path: '/faq', icon: HelpCircle, show: true },
   ];
 
   return (

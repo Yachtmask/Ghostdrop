@@ -11,7 +11,6 @@ import Dashboard from './pages/Dashboard';
 import CreateVault from './pages/CreateVault';
 import Settings from './pages/Settings';
 import Download from './pages/Download';
-import FAQ from './pages/FAQ';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
@@ -69,8 +68,7 @@ function App() {
         <AptosWalletAdapterProvider 
           {...({ wallets } as any)} 
           autoConnect={true}
-          dappConfig={{ network: Network.TESTNET, aptosConnectDappId: 'ghostdrop' }}
-          optInFeatures={['signTransaction', 'signMessage']}
+          dappConfig={{ network: Network.TESTNET }}
         >
           <Router>
             <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-blue-500/30 overflow-x-hidden">
@@ -81,7 +79,6 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/create" element={<CreateVault />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/faq" element={<FAQ />} />
                   <Route path="/download/:account/:blobName" element={<Download />} />
                 </Routes>
               </main>

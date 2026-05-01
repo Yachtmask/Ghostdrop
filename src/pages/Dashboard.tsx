@@ -7,11 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, FileText, Trash2, Download, 
   Clock, Search, FileCode, FileImage, FileVideo, FileAudio, FileArchive, File as FileIcon,
-  Lock, Edit2, X
+  Lock, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { shelbyService } from '../services/shelbyService';
-import { EncryptionService } from '../services/encryptionService';
 
 const shelbyClient = new ShelbyClient({
   network: Network.TESTNET,
@@ -87,13 +86,11 @@ const Dashboard = () => {
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  // Delete Modal State
-  const [vaultToDelete, setVaultToDelete] = useState<{ metadataBlobName: string, fileBlobName: string } | null>(null);
-
-  // Edit Timer Modal State
-  const [vaultToEditTimer, setVaultToEditTimer] = useState<{ metadataBlobName: string, durationMs: number } | null>(null);
-  const [editTimerValue, setEditTimerValue] = useState(30);
-  const [editTimerUnit, setEditTimerUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'months'>('days');
+  // Verification State
+  const [verifyBlobId, setVerifyBlobId] = useState('');
+  const [verifyOwnerAddress, setVerifyOwnerAddress] = useState('');
+  const [verifyStatus, setVerifyStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [verifyResult, setVerifyResult] = useState<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -103,6 +100,9 @@ const Dashboard = () => {
   useEffect(() => {
     if (connected && account) {
       fetchVaults();
+      if (!verifyOwnerAddress) {
+        setVerifyOwnerAddress(account.address.toString());
+      }
     } else {
       setIsLoading(false);
     }
@@ -182,14 +182,9 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (metadataBlobName: string, fileBlobName: string) => {
-    setVaultToDelete({ metadataBlobName, fileBlobName });
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!account || !vaultToDelete) return;
+    if (!account) return;
+    if (!confirm('Are you sure you want to delete this vault? This action cannot be undone.')) return;
     
-    const { metadataBlobName, fileBlobName } = vaultToDelete;
-    setVaultToDelete(null);
     setIsDeleting(metadataBlobName);
     try {
       // Delete both the metadata and the file blob from Shelby
@@ -219,49 +214,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleEditTimerConfirm = async () => {
-    if (!account || !vaultToEditTimer) return;
-    const { metadataBlobName } = vaultToEditTimer;
-    
-    const multipliers = {
-      seconds: 1000,
-      minutes: 60 * 1000,
-      hours: 60 * 60 * 1000,
-      days: 24 * 60 * 60 * 1000,
-      months: 30 * 24 * 60 * 60 * 1000,
-    };
-    const newDurationMs = editTimerValue * multipliers[editTimerUnit];
-    
-    setVaultToEditTimer(null);
-    
-    try {
-      const res = await fetch('/api/checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountAddress: account.address.toString(),
-          metadataBlobName,
-          durationMs: newDurationMs
-        })
-      });
-      
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Timer updated successfully!");
-        setVaults(prev => prev.map(v => 
-          v.metadataBlobName === metadataBlobName 
-            ? { ...v, dropTimestamp: data.newDropTimestamp, durationMs: newDurationMs } 
-            : v
-        ));
-      } else {
-        toast.error(data.error || "Failed to update timer");
-      }
-    } catch (error) {
-      console.error("Update timer error:", error);
-      toast.error("Network error during timer update");
-    }
-  };
-
   const handleReceive = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!receiveBlob || !receivePassphrase) {
@@ -271,91 +223,51 @@ const Dashboard = () => {
 
     setIsDecrypting(true);
     try {
-      let targetAccount = '';
-      let targetBlobName = '';
-      let targetKeyPackage = '';
-
-      // Check if it's a full link
+      // The user is trying to decrypt from the dashboard.
+      // We need the owner address to download from Shelby.
+      // If they only have the Blob ID, we can't easily fetch it without the owner address.
+      // Let's redirect them to the download page if they provide the full URL, or tell them they need the link.
       if (receiveBlob.includes('/download/')) {
-        try {
-          const url = new URL(receiveBlob);
-          const pathParts = url.pathname.split('/');
-          // Format: /download/:account/:blobName
-          const downloadIndex = pathParts.indexOf('download');
-          if (downloadIndex !== -1 && pathParts.length >= downloadIndex + 3) {
-            targetAccount = pathParts[downloadIndex + 1];
-            targetBlobName = pathParts[downloadIndex + 2];
-          }
-
-          // Extract key from hash
-          const hashParams = new URLSearchParams(url.hash.substring(1));
-          targetKeyPackage = hashParams.get('key') || '';
-        } catch (err) {
-          console.error("Failed to parse link:", err);
-        }
-      } else {
-        // Assume it's just a Blob ID, but we need the owner address
-        // In this case, we can't easily download without the owner address
-        // unless we search all vaults (which we don't have an API for here).
-        // So we still tell them to use the full link if they don't have the owner.
-        toast.error("Please use the full Download Link provided in the email/message to decrypt from here.");
-        setIsDecrypting(false);
+        window.location.href = receiveBlob;
         return;
       }
-
-      if (!targetAccount || !targetBlobName || !targetKeyPackage) {
-        toast.error("Invalid link format. Please use the exact link from your notification.");
-        setIsDecrypting(false);
-        return;
-      }
-
-      toast.loading('Decrypting key package...', { id: 'dashboard-decrypt' });
       
-      // 1. Decrypt the AES key using the passphrase
-      let exportedKey: string;
-      try {
-        exportedKey = await EncryptionService.decryptKeyForRecipient(targetKeyPackage, receivePassphrase);
-      } catch (e) {
-        toast.error('Invalid passphrase. Could not decrypt the key package.', { id: 'dashboard-decrypt' });
-        setIsDecrypting(false);
-        return;
-      }
-
-      const aesKey = await EncryptionService.importKey(exportedKey);
-
-      // 2. Fetch the ciphertext blob from Shelby
-      toast.loading('Downloading encrypted file from Shelby...', { id: 'dashboard-decrypt' });
-      const encryptedData = await shelbyService.download(targetAccount, targetBlobName);
-      const encryptedBlob = new Blob([encryptedData]);
-
-      // 3. Decrypt the file
-      toast.loading('Decrypting file...', { id: 'dashboard-decrypt' });
-      const decryptedBlob = await EncryptionService.decryptFile(encryptedBlob, aesKey);
-
-      // 4. Trigger download
-      toast.loading('Preparing download...', { id: 'dashboard-decrypt' });
-      
-      let originalFileName = 'decrypted_file';
-      const parts = targetBlobName.split('_');
-      if (parts.length > 1) {
-        originalFileName = parts.slice(1).join('_');
-      }
-
-      const downloadUrl = URL.createObjectURL(decryptedBlob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = originalFileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(downloadUrl);
-
-      toast.success('File decrypted and downloaded successfully!', { id: 'dashboard-decrypt' });
-    } catch (error: any) {
-      console.error("Decryption failed:", error);
-      toast.error(`Decryption failed: ${error.message || 'Unknown error'}`, { id: 'dashboard-decrypt' });
+      toast.error("Please use the full Download Link provided in the email/message.");
+    } catch (error) {
+      toast.error("Decryption failed. Invalid passphrase or corrupted blob.");
     } finally {
       setIsDecrypting(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyBlobId || !verifyOwnerAddress) {
+      toast.error("Please provide both Blob ID and Owner Address");
+      return;
+    }
+    
+    setVerifyStatus('loading');
+    try {
+      const gatewayUrl = "https://api.testnet.shelby.xyz/shelby";
+      const res = await fetch(`${gatewayUrl}/v1/blobs/${verifyOwnerAddress}/${verifyBlobId}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        setVerifyResult(data);
+        setVerifyStatus('success');
+        toast.success("Vault verified successfully!");
+      } else if (res.status === 404) {
+        setVerifyStatus('error');
+        toast.error("Vault not found on Shelby network.");
+      } else {
+        setVerifyStatus('error');
+        toast.error(`Error verifying vault: ${res.statusText}`);
+      }
+    } catch (err) {
+      console.error("Verification error:", err);
+      setVerifyStatus('error');
+      toast.error("Network error while verifying vault.");
     }
   };
 
@@ -414,6 +326,15 @@ const Dashboard = () => {
         >
           Receive & Decrypt
           {activeTab === 'receive' && (
+            <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('verify')}
+          className={`pb-4 px-4 font-bold transition-all relative ${activeTab === 'verify' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          Verify Vault
+          {activeTab === 'verify' && (
             <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
           )}
         </button>
@@ -480,6 +401,15 @@ const Dashboard = () => {
                           {getFileIcon(vault.fileName)}
                         </div>
                         <div className="flex gap-2">
+                          <a 
+                            href={shelbyService.getExplorerUrl(account?.address?.toString() || '', vault.blobName)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-xl transition-colors"
+                            title="View on Shelby Explorer"
+                          >
+                            <ExternalLink className="w-5 h-5" />
+                          </a>
                           <button 
                             onClick={() => handleDelete(vault.metadataBlobName, vault.blobName)}
                             disabled={isDeleting === vault.metadataBlobName}
@@ -517,50 +447,27 @@ const Dashboard = () => {
                                 {account?.address?.toString().slice(0, 6)}...{account?.address?.toString().slice(-4)}
                               </span>
                             </p>
-                            <p className="text-xs text-slate-500 flex justify-between">
-                              <span>Last Checked In:</span>
-                              <span className="font-mono text-slate-400">
-                                {new Date(vault.dropTimestamp - vault.durationMs).toLocaleString()}
-                              </span>
-                            </p>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <Clock className={`w-5 h-5 ${isDropped ? 'text-red-500' : 'text-blue-500'}`} />
-                              <div>
-                                <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Time Remaining</p>
-                                <p className={`font-mono font-bold ${isDropped ? 'text-red-400' : 'text-blue-400'}`}>
-                                  {formatTimeRemaining(timeRemaining)}
-                                </p>
-                              </div>
+                        <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <Clock className={`w-5 h-5 ${isDropped ? 'text-red-500' : 'text-blue-500'}`} />
+                            <div>
+                              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Time Remaining</p>
+                              <p className={`font-mono font-bold ${isDropped ? 'text-red-400' : 'text-blue-400'}`}>
+                                {formatTimeRemaining(timeRemaining)}
+                              </p>
                             </div>
-                            {!isDropped && (
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => setVaultToEditTimer({ metadataBlobName: vault.metadataBlobName, durationMs: vault.durationMs })}
-                                  className="p-2 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300 rounded-xl transition-colors"
-                                  title="Edit Timer"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleCheckIn(vault.metadataBlobName, vault.durationMs)}
-                                  className="px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 rounded-xl text-sm font-bold transition-colors"
-                                >
-                                  Check In
-                                </button>
-                              </div>
-                            )}
                           </div>
-                          <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full transition-all duration-1000 ${isDropped ? 'bg-red-500' : 'bg-blue-500'}`}
-                              style={{ width: `${isDropped ? 100 : Math.max(0, Math.min(100, ((vault.durationMs - timeRemaining) / vault.durationMs) * 100))}%` }}
-                            />
-                          </div>
+                          {!isDropped && (
+                            <button
+                              onClick={() => handleCheckIn(vault.metadataBlobName, vault.durationMs)}
+                              className="px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 rounded-xl text-sm font-bold transition-colors"
+                            >
+                              Check In
+                            </button>
+                          )}
                         </div>
 
                         <div className="flex items-center justify-between text-sm text-slate-400">
@@ -644,183 +551,110 @@ const Dashboard = () => {
           </motion.div>
         ) : (
           <motion.div
-            key="receive"
+            key="verify"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="max-w-2xl mx-auto"
           >
             <div className="bg-slate-900 border border-slate-800 rounded-[48px] p-10 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-              
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500"></div>
+
               <div className="text-center space-y-4 mb-10">
                 <div className="w-20 h-20 bg-slate-950 rounded-3xl flex items-center justify-center mx-auto border border-slate-800">
-                  <Download className="w-10 h-10 text-blue-400" />
+                  <Search className="w-10 h-10 text-blue-400" />
                 </div>
-                <h2 className="text-3xl font-bold">Decrypt a Vault</h2>
-                <p className="text-slate-400">Enter the Blob ID and Passphrase provided by the vault owner to download and decrypt the file.</p>
+                <h2 className="text-3xl font-bold">Verify Vault on Shelby</h2>
+                <p className="text-slate-400">Check if a vault exists on the decentralized Shelby network.</p>
               </div>
 
-              <form onSubmit={handleReceive} className="space-y-6">
+              <form onSubmit={handleVerify} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Owner Address</label>
+                  <input
+                    type="text"
+                    value={verifyOwnerAddress}
+                    onChange={(e) => setVerifyOwnerAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 outline-none font-mono text-sm"
+                    disabled={verifyStatus === 'loading'}
+                  />
+                </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Blob ID</label>
                   <input
                     type="text"
-                    value={receiveBlob}
-                    onChange={(e) => setReceiveBlob(e.target.value)}
-                    placeholder="e.g., 0x123abc..."
+                    value={verifyBlobId}
+                    onChange={(e) => setVerifyBlobId(e.target.value)}
+                    placeholder="e.g., 1775318151849_file.txt"
                     className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 outline-none font-mono text-sm"
-                    disabled={isDecrypting}
+                    disabled={verifyStatus === 'loading'}
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">Encryption Passphrase</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <input
-                      type="password"
-                      value={receivePassphrase}
-                      onChange={(e) => setReceivePassphrase(e.target.value)}
-                      placeholder="Enter passphrase"
-                      className="w-full pl-12 pr-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 outline-none"
-                      disabled={isDecrypting}
-                    />
-                  </div>
                 </div>
                 <button
                   type="submit"
-                  disabled={isDecrypting || !receiveBlob || !receivePassphrase}
+                  disabled={verifyStatus === 'loading' || !verifyBlobId || !verifyOwnerAddress}
                   className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
-                    isDecrypting || !receiveBlob || !receivePassphrase
+                    verifyStatus === 'loading' || !verifyBlobId || !verifyOwnerAddress
                       ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20'
                   }`}
                 >
-                  {isDecrypting ? (
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  {verifyStatus === 'loading' ? (
+                    'Verifying...'
                   ) : (
-                    <Download className="w-6 h-6" />
+                    <>
+                      <Search className="w-5 h-5" />
+                      Verify on Shelby
+                    </>
                   )}
-                  {isDecrypting ? 'Decrypting...' : 'Decrypt & Download'}
                 </button>
               </form>
+
+              {verifyStatus === 'success' && verifyResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 p-6 bg-green-500/10 border border-green-500/20 rounded-2xl space-y-4"
+                >
+                  <div className="flex items-center gap-3 text-green-400 mb-4">
+                    <Shield className="w-6 h-6" />
+                    <h3 className="text-lg font-bold">Vault Found!</h3>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <p className="flex justify-between"><span className="text-slate-400">Network:</span> <span className="font-mono text-slate-300">Shelby Testnet</span></p>
+                    <p className="flex justify-between"><span className="text-slate-400">Blob Size:</span> <span className="font-mono text-slate-300">{(verifyResult.blobSize || 0)} bytes</span></p>
+                    <p className="flex justify-between"><span className="text-slate-400">Merkle Root:</span> <span className="font-mono text-slate-300 truncate max-w-[200px]">{verifyResult.blobMerkleRoot || 'N/A'}</span></p>
+                  </div>
+                  <a
+                    href={shelbyService.getExplorerUrl(verifyOwnerAddress, verifyBlobId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 w-full py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 text-blue-400"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View on Explorer
+                  </a>
+                </motion.div>
+              )}
+
+              {verifyStatus === 'error' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-2xl"
+                >
+                  <div className="flex items-center gap-3 text-red-400">
+                    <Shield className="w-6 h-6" />
+                    <h3 className="text-lg font-bold">Vault Not Found</h3>
+                  </div>
+                  <p className="text-sm text-slate-400 mt-2">
+                    The specified blob could not be found on the Shelby network. It may have expired, been deleted, or the details provided are incorrect.
+                  </p>
+                </motion.div>
+              )}
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {vaultToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Trash2 className="w-5 h-5 text-red-500" />
-                  Delete Vault
-                </h3>
-                <button
-                  onClick={() => setVaultToDelete(null)}
-                  className="text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-slate-400 mb-6">
-                Are you sure you want to delete this vault? This action cannot be undone and the vault will be permanently removed from the network.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setVaultToDelete(null)}
-                  className="px-4 py-2 rounded-xl font-bold text-slate-300 hover:bg-slate-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteConfirm}
-                  className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl font-bold transition-colors"
-                >
-                  Delete Vault
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Timer Modal */}
-      <AnimatePresence>
-        {vaultToEditTimer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-500" />
-                  Edit Timer Duration
-                </h3>
-                <button
-                  onClick={() => setVaultToEditTimer(null)}
-                  className="text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="space-y-4 mb-6">
-                <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">
-                  New Duration
-                </label>
-                <div className="flex gap-4">
-                  <input
-                    type="number"
-                    min="1"
-                    value={editTimerValue}
-                    onChange={(e) => setEditTimerValue(Number(e.target.value))}
-                    className="w-1/2 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
-                  />
-                  <select
-                    value={editTimerUnit}
-                    onChange={(e) => setEditTimerUnit(e.target.value as any)}
-                    className="w-1/2 px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
-                  >
-                    <option value="seconds">Seconds</option>
-                    <option value="minutes">Minutes</option>
-                    <option value="hours">Hours</option>
-                    <option value="days">Days</option>
-                    <option value="months">Months</option>
-                  </select>
-                </div>
-                <p className="text-sm text-slate-500">
-                  This will reset the timer and start counting down from the new duration immediately.
-                </p>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setVaultToEditTimer(null)}
-                  className="px-4 py-2 rounded-xl font-bold text-slate-300 hover:bg-slate-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleEditTimerConfirm}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors"
-                >
-                  Update Timer
-                </button>
-              </div>
-            </motion.div>
-          </div>
         )}
       </AnimatePresence>
     </div>

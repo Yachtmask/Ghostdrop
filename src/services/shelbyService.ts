@@ -153,6 +153,13 @@ export class ShelbyService {
       throw new Error(errorMessage);
     }
   }
+
+  /**
+   * Generates a Shelby Explorer URL for a blob.
+   */
+  getExplorerUrl(accountAddress: string, blobName: string) {
+    return getShelbyBlobExplorerUrl("testnet", accountAddress, blobName);
+  }
 }
 
 export const shelbyService = new ShelbyService();

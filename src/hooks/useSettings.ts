@@ -1,26 +1,46 @@
 import { useState, useEffect } from 'react';
 
 export interface GhostDropSettings {
-  // Settings interface kept for future expansion
-  _version?: string;
+  notifications: {
+    emailOnDrop: boolean;
+    warningEmail: boolean;
+    confirmationEmail: boolean;
+  };
+  emailjs: {
+    serviceId: string;
+    templateId: string;
+    publicKey: string;
+  };
+  defaults: {
+    checkInWindow: number;
+    expiry: number;
+    blobNamePrefix: string;
+  };
 }
 
 const DEFAULT_SETTINGS: GhostDropSettings = {
-  _version: '1.0',
+  notifications: {
+    emailOnDrop: true,
+    warningEmail: true,
+    confirmationEmail: false,
+  },
+  emailjs: {
+    serviceId: '',
+    templateId: '',
+    publicKey: '',
+  },
+  defaults: {
+    checkInWindow: 1,
+    expiry: 365,
+    blobNamePrefix: 'vault_',
+  },
 };
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<GhostDropSettings>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ghostdrop_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Clean up legacy settings
-        if (parsed.emailjs) delete parsed.emailjs;
-        if (parsed.notifications) delete parsed.notifications;
-        if (parsed.defaults) delete parsed.defaults;
-        return { ...DEFAULT_SETTINGS, ...parsed };
-      }
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
     }
     return DEFAULT_SETTINGS;
   });
@@ -33,8 +53,32 @@ export const useSettings = () => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const updateNotifications = (newNotifications: Partial<GhostDropSettings['notifications']>) => {
+    setSettings((prev) => ({
+      ...prev,
+      notifications: { ...prev.notifications, ...newNotifications },
+    }));
+  };
+
+  const updateEmailJS = (newEmailJS: Partial<GhostDropSettings['emailjs']>) => {
+    setSettings((prev) => ({
+      ...prev,
+      emailjs: { ...prev.emailjs, ...newEmailJS },
+    }));
+  };
+
+  const updateDefaults = (newDefaults: Partial<GhostDropSettings['defaults']>) => {
+    setSettings((prev) => ({
+      ...prev,
+      defaults: { ...prev.defaults, ...newDefaults },
+    }));
+  };
+
   return {
     settings,
     updateSettings,
+    updateNotifications,
+    updateEmailJS,
+    updateDefaults,
   };
 };

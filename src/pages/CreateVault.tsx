@@ -9,13 +9,12 @@ import { Upload, Shield, CheckCircle2, Plus, Trash2, Clock } from 'lucide-react'
 import toast from 'react-hot-toast';
 import { EncryptionService } from '../services/encryptionService';
 import { shelbyService } from '../services/shelbyService';
-import { defaultErasureCodingConfig, expectedTotalChunksets } from '@shelby-protocol/sdk/browser';
-
-import confetti from 'canvas-confetti';
 
 const shelbyClient = new ShelbyClient({
   network: Network.TESTNET,
   apiKey: "aptoslabs_Rtogsh34Kap_NwmjG9ChuFGAmNc4Kg7zVXQVbdRHchTJL",
+  // @ts-ignore
+  gatewayUrl: "https://api.shelbynet.shelby.xyz/shelby",
 });
 
 interface Recipient {
@@ -48,21 +47,6 @@ const CreateVault = () => {
     aesKey: CryptoKey;
   } | null>(null);
 
-  const getPassphraseStrength = (pass: string) => {
-    if (!pass) return -1;
-    let score = 0;
-    if (pass.length > 8) score++;
-    if (pass.length > 12) score++;
-    if (/[A-Z]/.test(pass)) score++;
-    if (/[0-9]/.test(pass)) score++;
-    if (/[^A-Za-z0-9]/.test(pass)) score++;
-    return Math.min(4, score);
-  };
-
-  const strength = getPassphraseStrength(passphrase);
-  const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
-
   // Reset preparation state if inputs change
   React.useEffect(() => {
     setIsFullyPrepared(false);
@@ -85,20 +69,9 @@ const CreateVault = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      // Show warning if file is very large (500MB+) for UX, but allow upload
-      if (selectedFile.size > 500 * 1024 * 1024) {
-        toast((t) => (
-          <div>
-            <p className="font-bold mb-2">Large File Warning</p>
-            <p className="text-sm mb-3">This file is over 500MB. Upload may take significantly longer.</p>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="text-blue-400 hover:text-blue-300 text-sm"
-            >
-              OK, Continue Anyway
-            </button>
-          </div>
-        ), { duration: 10000 });
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        toast.error('File size exceeds 50MB limit.');
+        return;
       }
       setFile(selectedFile);
       setIsPreparing(true);
@@ -163,7 +136,7 @@ const CreateVault = () => {
       const exportedKey = await EncryptionService.exportKey(preparedData.aesKey);
       const encryptedKeyPackage = await EncryptionService.encryptKeyForRecipient(exportedKey, passphrase);
 
-      const blobName = `ghostdrop/vault/encrypted.bin`;
+      const blobName = `${Date.now()}_${file.name}`;
 
       // 2. Prepare Metadata
       setProgressText('Preparing metadata...');
@@ -214,70 +187,22 @@ const CreateVault = () => {
 
   const handleUpload = async () => {
     if (!account) return toast.error("Connect wallet first");
-    if (!connected) return toast.error("Wallet not connected");
     
     setIsProcessing(true);
     setProgressText('Uploading to Shelby...');
     
     try {
-      console.log('[UPLOAD] Starting upload flow for account:', account.address.toString());
-      console.log('[UPLOAD] Blobs to upload:', finalBlobs.length);
-
-      const safeSignAndSubmitTransaction = async (transaction: any) => {
-        console.log('[UPLOAD] Signing transaction...');
-        const payload = { ...transaction };
-        if (payload?.data?.functionArguments) {
-          payload.data.functionArguments = payload.data.functionArguments.map((arg: any) => {
-            if (Array.isArray(arg)) {
-              return arg.map((item: any) => {
-                if (item instanceof Uint8Array) return Array.from(item);
-                if (typeof item === 'bigint') return item.toString();
-                return item;
-              });
-            }
-            if (arg instanceof Uint8Array) return Array.from(arg);
-            if (typeof arg === 'bigint') return arg.toString();
-            return arg;
-          });
-        }
-        const result = await signAndSubmitTransaction(payload);
-        console.log('[UPLOAD] Transaction signed:', result);
-        return result;
-      };
-
-      // Step 1: Generate commitments (already done in prepare)
-      console.log('[UPLOAD] Step 1: Commitments already generated');
-
-      // Step 2: Create registration payload and sign
-      console.log('[UPLOAD] Step 2: Creating registration payload and signing...');
-      for (const blob of finalBlobs) {
-        console.log(`[UPLOAD] Processing blob: ${blob.blobName}, size: ${blob.blobData.length}`);
-        
-        // Calculate expected chunksets for this blob - using ES6 imports instead of require()
-        const config = defaultErasureCodingConfig();
-        const numChunksets = expectedTotalChunksets(blob.blobData.length, config.chunkSizeBytes);
-        
-        console.log(`[UPLOAD] Blob ${blob.blobName}: size=${blob.blobData.length}, chunksets=${numChunksets}`);
-      }
-
-      // Step 3: Upload both blobs in a single transaction to preserve user gesture
-      console.log('[UPLOAD] Step 3: Uploading blobs via uploadBlobs...');
-      const expirationMicros = (Date.now() + 1000 * 60 * 60 * 24 * 30) * 1000; // 30 days
-      console.log('[UPLOAD] Expiration (micros):', expirationMicros);
-
+      // Upload both blobs in a single transaction to preserve user gesture
       await uploadBlobs({
         // @ts-ignore
-        signer: { account, signAndSubmitTransaction: safeSignAndSubmitTransaction },
+        signer: { account, signAndSubmitTransaction },
         blobs: finalBlobs,
         // @ts-ignore
-        expirationMicros
+        expirationMicros: BigInt(Date.now() * 1000 + 3650 * 24 * 3600 * 1_000_000), // 10 years
       });
-
-      console.log('[UPLOAD] Blobs uploaded successfully');
 
       // Register with Watchdog
       setProgressText('Registering with Watchdog...');
-      console.log('[UPLOAD] Registering with watchdog...');
       await fetch('/api/watch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -288,22 +213,10 @@ const CreateVault = () => {
         })
       });
 
-      console.log('[UPLOAD] Watchdog registration complete');
       toast.success('Vault created and secured successfully!');
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('[UPLOAD] Finalization failed:', error);
-      console.error('[UPLOAD] Full error:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        stack: error.stack
-      });
+      console.error('Finalization failed:', error);
       toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
       setIsFullyPrepared(false); // Reset so they can try again
     } finally {
@@ -348,7 +261,7 @@ const CreateVault = () => {
                 </div>
                 <div>
                   <p className="text-lg font-bold">{file ? file.name : 'Select or drag file'}</p>
-                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'No file size limit'}</p>
+                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Max size 50MB'}</p>
                 </div>
               </div>
             </div>
@@ -400,23 +313,6 @@ const CreateVault = () => {
               className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
               disabled={isProcessing}
             />
-            {passphrase && (
-              <div className="space-y-1 mt-2">
-                <div className="flex gap-1 h-1.5">
-                  {[0, 1, 2, 3, 4].map((index) => (
-                    <div
-                      key={index}
-                      className={`flex-1 rounded-full transition-colors ${
-                        index <= strength ? strengthColors[strength] : 'bg-slate-800'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className={`text-xs text-right ${strengthColors[strength].replace('bg-', 'text-')}`}>
-                  {strengthLabels[strength]}
-                </p>
-              </div>
-            )}
             <p className="text-sm text-slate-500">
               This encrypts the AES key. You must share this passphrase with your recipients out-of-band.
             </p>
