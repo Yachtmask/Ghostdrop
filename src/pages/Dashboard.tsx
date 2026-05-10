@@ -21,6 +21,8 @@ const shelbyClient = new ShelbyClient({
 
 interface Recipient {
   email: string;
+  telegram: string;
+  aptosAddress: string;
   encryptedKeyPackage: string;
 }
 
