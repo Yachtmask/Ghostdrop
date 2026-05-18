@@ -45,7 +45,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-w-[150px] sm:max-w-full overflow-hidden">
             <WalletSelector />
           </div>
         </div>
