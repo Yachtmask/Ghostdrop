@@ -52,13 +52,13 @@ const CreateVault = () => {
 
   if (!connected) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center px-4">
         <div className="w-24 h-24 bg-slate-900 rounded-3xl flex items-center justify-center border border-slate-800">
           <Shield className="w-12 h-12 text-slate-700" />
         </div>
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Connect Your Wallet</h2>
-          <p className="text-slate-400 max-w-md">Please connect your Aptos wallet to create a new secure vault.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold">Connect Your Wallet</h2>
+          <p className="text-slate-400 max-w-md text-sm sm:text-base">Please connect your Aptos wallet to create a new secure vault.</p>
         </div>
       </div>
     );
@@ -224,26 +224,26 @@ const CreateVault = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 pb-20">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">Create Dead Man's Switch</h1>
-        <p className="text-slate-400">Encrypt your files, set a timer, and let Shelby handle the rest.</p>
+    <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 pb-12 sm:pb-20 px-4 sm:px-0 overflow-x-hidden">
+      <div className="text-center space-y-2 sm:space-y-4">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Create Dead Man's Switch</h1>
+        <p className="text-slate-400 text-sm sm:text-base">Encrypt your files, set a timer, and let Shelby handle the rest.</p>
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 md:p-10 rounded-3xl md:rounded-[48px] bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden"
+        className="p-4 sm:p-6 md:p-10 rounded-2xl sm:rounded-3xl md:rounded-[48px] bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden"
       >
-        <form onSubmit={isFullyPrepared ? (e) => { e.preventDefault(); handleUpload(); } : handlePrepare} className="space-y-12">
+        <form onSubmit={isFullyPrepared ? (e) => { e.preventDefault(); handleUpload(); } : handlePrepare} className="space-y-8 sm:space-y-12">
           
           {/* File Upload */}
           <div className="space-y-4">
-            <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">
+            <label className="block text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">
               1. Select File
             </label>
             <div 
-              className={`relative border-2 border-dashed rounded-3xl p-10 text-center transition-all ${
+              className={`relative border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-center transition-all ${
                 file ? 'border-blue-500/50 bg-blue-500/5' : 'border-slate-800 hover:border-slate-700 bg-slate-950'
               }`}
             >
@@ -253,13 +253,13 @@ const CreateVault = () => {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 disabled={isProcessing}
               />
-              <div className="space-y-4">
-                <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mx-auto">
-                  {file ? <CheckCircle2 className="w-8 h-8 text-blue-400" /> : <Upload className="w-8 h-8 text-slate-600" />}
+              <div className="space-y-3 sm:space-y-4">
+                <div className="w-12 sm:w-16 h-12 sm:h-16 bg-slate-900 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto">
+                  {file ? <CheckCircle2 className="w-6 sm:w-8 h-6 sm:h-8 text-blue-400" /> : <Upload className="w-6 sm:w-8 h-6 sm:h-8 text-slate-600" />}
                 </div>
                 <div>
-                  <p className="text-lg font-bold">{file ? file.name : 'Select or drag file'}</p>
-                  <p className="text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Max size 50MB'}</p>
+                  <p className="text-base sm:text-lg font-bold break-words">{file ? file.name : 'Select or drag file'}</p>
+                  <p className="text-xs sm:text-sm text-slate-500">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Max size 50MB'}</p>
                 </div>
               </div>
             </div>
@@ -267,22 +267,22 @@ const CreateVault = () => {
 
           {/* Timer UI */}
           <div className="space-y-4">
-            <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">
+            <label className="block text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">
               2. Set Timer
             </label>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <input
                 type="number"
                 min="1"
                 value={timerValue}
                 onChange={(e) => setTimerValue(Number(e.target.value))}
-                className="w-1/2 px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                className="flex-1 px-3 sm:px-4 py-3 sm:py-4 bg-slate-950 border border-slate-800 rounded-xl sm:rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm sm:text-base"
                 disabled={isProcessing}
               />
               <select
                 value={timerUnit}
                 onChange={(e) => setTimerUnit(e.target.value as any)}
-                className="w-1/2 px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                className="flex-1 px-3 sm:px-4 py-3 sm:py-4 bg-slate-950 border border-slate-800 rounded-xl sm:rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm sm:text-base"
                 disabled={isProcessing}
               >
                 <option value="seconds">Seconds</option>
@@ -292,15 +292,15 @@ const CreateVault = () => {
                 <option value="months">Months</option>
               </select>
             </div>
-            <p className="text-sm text-slate-500 flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Vault will drop if timer reaches zero.
+            <p className="text-xs sm:text-sm text-slate-500 flex items-center gap-2">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>Vault will drop if timer reaches zero.</span>
             </p>
           </div>
 
           {/* Encryption Passphrase */}
           <div className="space-y-4">
-            <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">
+            <label className="block text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">
               3. Encryption Passphrase
             </label>
             <input
@@ -308,29 +308,29 @@ const CreateVault = () => {
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
               placeholder="Enter a strong passphrase"
-              className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+              className="w-full px-3 sm:px-4 py-3 sm:py-4 bg-slate-950 border border-slate-800 rounded-xl sm:rounded-2xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm sm:text-base"
               disabled={isProcessing}
             />
-            <p className="text-sm text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-500">
               This encrypts the AES key. You must share this passphrase with your recipients out-of-band.
             </p>
           </div>
 
           {/* Recipients */}
           <div className="space-y-4">
-            <label className="block text-sm font-bold text-slate-400 uppercase tracking-wider">
+            <label className="block text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">
               4. Recipients
             </label>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {recipients.map((recipient, index) => (
-                <div key={index} className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-4 relative">
+                <div key={index} className="p-3 sm:p-4 bg-slate-950 border border-slate-800 rounded-xl sm:rounded-2xl space-y-3 sm:space-y-4 relative">
                   {recipients.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeRecipient(index)}
-                      className="absolute top-4 right-4 text-slate-500 hover:text-red-400"
+                      className="absolute top-3 right-3 text-slate-500 hover:text-red-400 flex-shrink-0"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 sm:w-5 h-4 sm:h-5" />
                     </button>
                   )}
                   <input
@@ -338,17 +338,16 @@ const CreateVault = () => {
                     placeholder="Email Address (Required)"
                     value={recipient.email}
                     onChange={(e) => updateRecipient(index, 'email', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900 border border-slate-800 rounded-lg sm:rounded-xl focus:border-blue-500 outline-none text-sm sm:text-base"
                     disabled={isProcessing}
                   />
-
                 </div>
               ))}
               <button
                 type="button"
                 onClick={addRecipient}
                 disabled={isProcessing}
-                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium"
+                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium text-sm sm:text-base"
               >
                 <Plus className="w-4 h-4" /> Add Another Recipient
               </button>
@@ -360,14 +359,15 @@ const CreateVault = () => {
               type="button"
               onClick={handleUpload}
               disabled={isProcessing}
-              className={`w-full py-6 rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3 shadow-2xl bg-green-600 hover:bg-green-700 text-white shadow-green-600/30`}
+              className={`w-full py-4 sm:py-6 rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-2xl bg-green-600 hover:bg-green-700 text-white shadow-green-600/30`}
             >
               {isProcessing ? (
                 progressText || 'Processing...'
               ) : (
                 <>
-                  <Shield className="w-6 h-6" />
-                  Confirm in Wallet & Upload
+                  <Shield className="w-5 sm:w-6 h-5 sm:h-6" />
+                  <span className="hidden sm:inline">Confirm in Wallet & Upload</span>
+                  <span className="sm:hidden">Confirm & Upload</span>
                 </>
               )}
             </button>
@@ -375,7 +375,7 @@ const CreateVault = () => {
             <button
               type="submit"
               disabled={isPreparing || !file || !passphrase}
-              className={`w-full py-6 rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3 shadow-2xl ${
+              className={`w-full py-4 sm:py-6 rounded-xl sm:rounded-2xl font-bold text-base sm:text-xl transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-2xl ${
                 isPreparing || !file || !passphrase
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30'
@@ -385,7 +385,7 @@ const CreateVault = () => {
                 progressText || 'Preparing File...'
               ) : (
                 <>
-                  <Shield className="w-6 h-6" />
+                  <Shield className="w-5 sm:w-6 h-5 sm:h-6" />
                   Prepare Vault
                 </>
               )}

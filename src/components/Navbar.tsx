@@ -15,8 +15,8 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md overflow-x-hidden">
+      <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between min-w-0">
         <Link to="/" className="flex items-center gap-2 group">
           <div className="p-2 bg-blue-600/20 rounded-lg group-hover:bg-blue-600/30 transition-colors">
             <Ghost className="w-6 h-6 text-blue-400" />
@@ -26,8 +26,8 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <div className="flex items-center gap-2 md:gap-6">
-          <div className="flex items-center gap-1 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-6 min-w-0 flex-shrink">
+          <div className="flex items-center gap-1 md:gap-4 min-w-0">
             {navItems.map((item) => item.show && (
               <Link
                 key={item.path}
@@ -45,8 +45,10 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-3 max-w-[150px] sm:max-w-full overflow-hidden">
-            <WalletSelector />
+          <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
+            <div className="overflow-hidden">
+              <WalletSelector />
+            </div>
           </div>
         </div>
       </div>

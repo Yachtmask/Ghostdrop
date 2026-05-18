@@ -278,42 +278,43 @@ const Dashboard = () => {
 
   if (!connected) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center px-4">
         <div className="w-24 h-24 bg-slate-900 rounded-3xl flex items-center justify-center border border-slate-800">
           <Shield className="w-12 h-12 text-slate-700" />
         </div>
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold">Connect Your Wallet</h2>
-          <p className="text-slate-400 max-w-md">Please connect your Aptos wallet to view your vaults.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold">Connect Your Wallet</h2>
+          <p className="text-slate-400 max-w-md text-sm sm:text-base">Please connect your Aptos wallet to view your vaults.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-slate-400 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            Connected as <span className="font-mono text-slate-300">{account?.address?.toString().slice(0, 6)}...{account?.address?.toString().slice(-4)}</span>
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-12 sm:pb-20 px-4 sm:px-0 overflow-x-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 sm:gap-6">
+        <div className="space-y-2 min-w-0">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-slate-400 flex items-center gap-2 text-xs sm:text-sm break-all">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0"></span>
+            <span className="hidden sm:inline">Connected as</span>
+            <span className="font-mono text-slate-300 truncate">{account?.address?.toString().slice(0, 6)}...{account?.address?.toString().slice(-4)}</span>
           </p>
         </div>
         
-        <div className="flex gap-4">
-          <div className="px-6 py-4 bg-slate-900 rounded-2xl border border-slate-800 text-center">
-            <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Active Vaults</p>
-            <p className="text-3xl font-bold text-blue-400">{vaults.length}</p>
+        <div className="flex gap-2 sm:gap-4 flex-shrink-0">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 bg-slate-900 rounded-lg sm:rounded-2xl border border-slate-800 text-center">
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Active Vaults</p>
+            <p className="text-2xl sm:text-3xl font-bold text-blue-400">{vaults.length}</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-800 pb-px">
+      <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-px overflow-x-auto">
         <button
           onClick={() => setActiveTab('vaults')}
-          className={`pb-4 px-4 font-bold transition-all relative ${activeTab === 'vaults' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`pb-4 px-2 sm:px-4 font-bold transition-all relative text-xs sm:text-base whitespace-nowrap ${activeTab === 'vaults' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
         >
           My Vaults
           {activeTab === 'vaults' && (
@@ -322,18 +323,19 @@ const Dashboard = () => {
         </button>
         <button
           onClick={() => setActiveTab('receive')}
-          className={`pb-4 px-4 font-bold transition-all relative ${activeTab === 'receive' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`pb-4 px-2 sm:px-4 font-bold transition-all relative text-xs sm:text-base whitespace-nowrap ${activeTab === 'receive' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
         >
-          Receive & Decrypt
+          <span className="hidden sm:inline">Receive & Decrypt</span>
+          <span className="sm:hidden">Receive</span>
           {activeTab === 'receive' && (
             <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
           )}
         </button>
         <button
           onClick={() => setActiveTab('verify')}
-          className={`pb-4 px-4 font-bold transition-all relative ${activeTab === 'verify' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`pb-4 px-2 sm:px-4 font-bold transition-all relative text-xs sm:text-base whitespace-nowrap ${activeTab === 'verify' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
         >
-          Verify Vault
+          Verify
           {activeTab === 'verify' && (
             <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
           )}
@@ -350,8 +352,8 @@ const Dashboard = () => {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div className="relative w-full md:w-96">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
+              <div className="relative w-full md:w-96 min-w-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input
                   type="text"
@@ -374,7 +376,7 @@ const Dashboard = () => {
                 <p className="text-slate-500">You haven't created any vaults yet.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredVaults.map((vault, index) => {
                   const timeRemaining = vault.dropTimestamp - now;
                   const isDropped = timeRemaining <= 0;
@@ -385,7 +387,7 @@ const Dashboard = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`bg-slate-900 border rounded-3xl p-6 relative group transition-all ${
+                      className={`bg-slate-900 border rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative group transition-all ${
                         isDropped ? 'border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-slate-800 hover:border-slate-700'
                       }`}
                     >

@@ -71,9 +71,9 @@ function App() {
           dappConfig={{ network: Network.TESTNET }}
         >
           <Router>
-            <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-blue-500/30 overflow-x-hidden">
+            <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-blue-500/30 overflow-x-hidden w-full">
               <Navbar />
-              <main className="container mx-auto px-4 py-8">
+              <main className="container mx-auto px-4 py-6 sm:py-8 w-full overflow-x-hidden">
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/dashboard" element={<Dashboard />} />

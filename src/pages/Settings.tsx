@@ -122,10 +122,10 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 pb-20 font-sans text-[#9ab4c8]">
+    <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12 pb-12 sm:pb-20 px-4 sm:px-0 font-sans text-[#9ab4c8] overflow-x-hidden">
       <div className="space-y-2">
-        <h1 className="text-4xl font-[Unbounded] font-bold text-[#ddeeff] tracking-tight">Settings</h1>
-        <p className="text-[#4a6378]">Manage your profile, notifications, and vault defaults.</p>
+        <h1 className="text-3xl sm:text-4xl font-[Unbounded] font-bold text-[#ddeeff] tracking-tight">Settings</h1>
+        <p className="text-[#4a6378] text-sm sm:text-base">Manage your profile, notifications, and vault defaults.</p>
       </div>
 
       {/* Profile Section */}
@@ -134,37 +134,38 @@ const Settings = () => {
           <Shield className="w-5 h-5 text-[#00b4ff]" />
           <h2 className="text-xl font-[Unbounded] font-bold">Profile</h2>
         </div>
-        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-6 space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
+        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+            <div className="space-y-1 min-w-0">
               <p className="text-xs font-mono uppercase tracking-widest text-[#4a6378]">Connected Wallet</p>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-[#ddeeff] text-sm break-all">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <span className="font-mono text-[#ddeeff] text-xs sm:text-sm break-all truncate">
                   {account?.address.toString() || 'Not Connected'}
                 </span>
                 {connected && (
                   <button 
                     onClick={() => copyToClipboard(account?.address.toString() || '')}
-                    className="p-1.5 hover:bg-[#0f1e2e] rounded-md transition-colors text-[#00b4ff]"
+                    className="p-1.5 hover:bg-[#0f1e2e] rounded-md transition-colors text-[#00b4ff] flex-shrink-0"
                   >
                     <Copy className="w-4 h-4" />
                   </button>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
               {connected && wallet && (
-                <span className="px-3 py-1 bg-[#00b4ff]/10 text-[#00b4ff] text-xs font-bold rounded-full border border-[#00b4ff]/20">
+                <span className="px-2 sm:px-3 py-1 bg-[#00b4ff]/10 text-[#00b4ff] text-xs font-bold rounded-full border border-[#00b4ff]/20 whitespace-nowrap">
                   {wallet.name}
                 </span>
               )}
               {connected && (
                 <button 
                   onClick={() => disconnect()}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#ff3d3d]/10 hover:bg-[#ff3d3d]/20 text-[#ff3d3d] rounded-lg font-bold text-sm transition-all border border-[#ff3d3d]/20"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-[#ff3d3d]/10 hover:bg-[#ff3d3d]/20 text-[#ff3d3d] rounded-lg font-bold text-xs sm:text-sm transition-all border border-[#ff3d3d]/20 whitespace-nowrap"
                 >
-                  <LogOut className="w-4 h-4" />
-                  Disconnect
+                  <LogOut className="w-3 sm:w-4 h-3 sm:h-4" />
+                  <span className="hidden sm:inline">Disconnect</span>
+                  <span className="sm:hidden">DC</span>
                 </button>
               )}
             </div>
@@ -178,16 +179,16 @@ const Settings = () => {
           <Mail className="w-5 h-5 text-[#00ff88]" />
           <h2 className="text-xl font-[Unbounded] font-bold">Notifications</h2>
         </div>
-        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-6 space-y-6">
-          <div className="space-y-4">
+        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             {[
               { id: 'emailOnDrop', label: 'Email notifications on vault drop', desc: 'Get notified when a vault you created is released.' },
               { id: 'warningEmail', label: 'Warning email when 2 days remain', desc: 'Receive a reminder before your vault is automatically dropped.' },
               { id: 'confirmationEmail', label: 'Confirmation email when vault is created', desc: 'Get a receipt for every new vault secured on Shelby.' },
             ].map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-4 py-2">
-                <div className="space-y-1">
-                  <p className="text-[#ddeeff] font-bold">{item.label}</p>
+              <div key={item.id} className="flex items-center justify-between gap-2 sm:gap-4 py-2 flex-wrap">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <p className="text-[#ddeeff] font-bold text-sm">{item.label}</p>
                   <p className="text-xs text-[#4a6378]">{item.desc}</p>
                 </div>
                 <button
@@ -212,8 +213,8 @@ const Settings = () => {
           <ExternalLink className="w-5 h-5 text-[#00b4ff]" />
           <h2 className="text-xl font-[Unbounded] font-bold">EmailJS Configuration</h2>
         </div>
-        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
               <label className="text-xs font-mono uppercase tracking-widest text-[#4a6378]">Service ID</label>
               <input 
@@ -221,7 +222,7 @@ const Settings = () => {
                 value={settings.emailjs.serviceId}
                 onChange={(e) => handleEmailJSChange('serviceId', e.target.value)}
                 placeholder="service_xxxxxx"
-                className="w-full px-4 py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00b4ff] outline-none transition-all text-[#ddeeff] font-mono text-sm"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00b4ff] outline-none transition-all text-[#ddeeff] font-mono text-xs sm:text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -231,7 +232,7 @@ const Settings = () => {
                 value={settings.emailjs.templateId}
                 onChange={(e) => handleEmailJSChange('templateId', e.target.value)}
                 placeholder="template_xxxxxx"
-                className="w-full px-4 py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00b4ff] outline-none transition-all text-[#ddeeff] font-mono text-sm"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00b4ff] outline-none transition-all text-[#ddeeff] font-mono text-xs sm:text-sm"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -241,14 +242,14 @@ const Settings = () => {
                 value={settings.emailjs.publicKey}
                 onChange={(e) => handleEmailJSChange('publicKey', e.target.value)}
                 placeholder="user_xxxxxx"
-                className="w-full px-4 py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00b4ff] outline-none transition-all text-[#ddeeff] font-mono text-sm"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00b4ff] outline-none transition-all text-[#ddeeff] font-mono text-xs sm:text-sm"
               />
             </div>
           </div>
           <button 
             onClick={handleTestEmail}
             disabled={isTestingEmail}
-            className="w-full py-4 bg-[#00b4ff]/10 hover:bg-[#00b4ff]/20 text-[#00b4ff] rounded-xl font-bold transition-all border border-[#00b4ff]/20 flex items-center justify-center gap-2"
+            className="w-full py-3 sm:py-4 bg-[#00b4ff]/10 hover:bg-[#00b4ff]/20 text-[#00b4ff] rounded-xl font-bold transition-all border border-[#00b4ff]/20 flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             {isTestingEmail ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
             Test Email Configuration
@@ -262,15 +263,15 @@ const Settings = () => {
           <SettingsIcon className="w-5 h-5 text-[#00ff88]" />
           <h2 className="text-xl font-[Unbounded] font-bold">Default Vault Settings</h2>
         </div>
-        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-[#060d14] border border-[#0f1e2e] rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="space-y-2">
               <label className="text-xs font-mono uppercase tracking-widest text-[#4a6378]">Check-in Window (Days)</label>
               <input 
                 type="number"
                 value={settings.defaults.checkInWindow}
                 onChange={(e) => handleDefaultChange('checkInWindow', parseInt(e.target.value))}
-                className="w-full px-4 py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00ff88] outline-none transition-all text-[#ddeeff] font-mono text-sm"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00ff88] outline-none transition-all text-[#ddeeff] font-mono text-xs sm:text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -279,7 +280,7 @@ const Settings = () => {
                 type="number"
                 value={settings.defaults.expiry}
                 onChange={(e) => handleDefaultChange('expiry', parseInt(e.target.value))}
-                className="w-full px-4 py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00ff88] outline-none transition-all text-[#ddeeff] font-mono text-sm"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00ff88] outline-none transition-all text-[#ddeeff] font-mono text-xs sm:text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -288,7 +289,7 @@ const Settings = () => {
                 type="text"
                 value={settings.defaults.blobNamePrefix}
                 onChange={(e) => handleDefaultChange('blobNamePrefix', e.target.value)}
-                className="w-full px-4 py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00ff88] outline-none transition-all text-[#ddeeff] font-mono text-sm"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-[#020508] border border-[#0f1e2e] rounded-lg focus:border-[#00ff88] outline-none transition-all text-[#ddeeff] font-mono text-xs sm:text-sm"
               />
             </div>
           </div>
@@ -301,26 +302,28 @@ const Settings = () => {
           <AlertTriangle className="w-5 h-5" />
           <h2 className="text-xl font-[Unbounded] font-bold">Danger Zone</h2>
         </div>
-        <div className="bg-[#060d14] border border-[#ff3d3d]/30 rounded-xl p-6 space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-[#060d14] border border-[#ff3d3d]/30 rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6">
             <div className="space-y-1">
-              <p className="text-[#ddeeff] font-bold">Manage Local Data</p>
+              <p className="text-[#ddeeff] font-bold text-sm">Manage Local Data</p>
               <p className="text-xs text-[#4a6378]">Export your vault metadata for backup or clear it from this device.</p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3 flex-shrink-0">
               <button 
                 onClick={exportVaults}
-                className="flex items-center gap-2 px-6 py-3 bg-[#0f1e2e] hover:bg-[#1a2e3e] text-[#ddeeff] rounded-lg font-bold text-sm transition-all border border-[#0f1e2e]"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-[#0f1e2e] hover:bg-[#1a2e3e] text-[#ddeeff] rounded-lg font-bold text-xs sm:text-sm transition-all border border-[#0f1e2e] whitespace-nowrap"
               >
-                <Download className="w-4 h-4" />
-                Export All Vaults
+                <Download className="w-3 sm:w-4 h-3 sm:h-4" />
+                <span className="hidden sm:inline">Export All Vaults</span>
+                <span className="sm:hidden">Export</span>
               </button>
               <button 
                 onClick={deleteAllVaults}
-                className="flex items-center gap-2 px-6 py-3 bg-[#ff3d3d]/10 hover:bg-[#ff3d3d]/20 text-[#ff3d3d] rounded-lg font-bold text-sm transition-all border border-[#ff3d3d]/20"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-[#ff3d3d]/10 hover:bg-[#ff3d3d]/20 text-[#ff3d3d] rounded-lg font-bold text-xs sm:text-sm transition-all border border-[#ff3d3d]/20 whitespace-nowrap"
               >
-                <Trash2 className="w-4 h-4" />
-                Delete All Vaults
+                <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
+                <span className="hidden sm:inline">Delete All Vaults</span>
+                <span className="sm:hidden">Delete</span>
               </button>
             </div>
           </div>
