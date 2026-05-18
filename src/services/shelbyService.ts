@@ -25,7 +25,7 @@ export class ShelbyService {
 
   constructor() {
     // Geomi API key provided by the user
-    const apiKey = "aptoslabs_Rtogsh34Kap_NwmjG9ChuFGAmNc4Kg7zVXQVbdRHchTJL";
+    const apiKey = process.env.NEXT_PUBLIC_SHELBY_API_KEY;
     
     const config = {
       apiKey: apiKey,

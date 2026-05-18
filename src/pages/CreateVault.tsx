@@ -12,15 +12,13 @@ import { shelbyService } from '../services/shelbyService';
 
 const shelbyClient = new ShelbyClient({
   network: Network.TESTNET,
-  apiKey: "aptoslabs_Rtogsh34Kap_NwmjG9ChuFGAmNc4Kg7zVXQVbdRHchTJL",
+  apiKey: process.env.NEXT_PUBLIC_SHELBY_API_KEY,
   // @ts-ignore
   gatewayUrl: "https://api.shelbynet.shelby.xyz/shelby",
 });
 
 interface Recipient {
   email: string;
-  telegram: string;
-  aptosAddress: string;
 }
 
 const CreateVault = () => {
@@ -32,7 +30,7 @@ const CreateVault = () => {
   const [timerValue, setTimerValue] = useState(30);
   const [timerUnit, setTimerUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'months'>('days');
   const [passphrase, setPassphrase] = useState('');
-  const [recipients, setRecipients] = useState<Recipient[]>([{ email: '', telegram: '', aptosAddress: '' }]);
+  const [recipients, setRecipients] = useState<Recipient[]>([{ email: '' }]);
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -97,7 +95,7 @@ const CreateVault = () => {
   };
 
   const addRecipient = () => {
-    setRecipients([...recipients, { email: '', telegram: '', aptosAddress: '' }]);
+    setRecipients([...recipients, { email: '' }]);
   };
 
   const updateRecipient = (index: number, field: keyof Recipient, value: string) => {
@@ -343,22 +341,7 @@ const CreateVault = () => {
                     className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
                     disabled={isProcessing}
                   />
-                  <input
-                    type="text"
-                    placeholder="Telegram Username (Optional)"
-                    value={recipient.telegram}
-                    onChange={(e) => updateRecipient(index, 'telegram', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
-                    disabled={isProcessing}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Aptos Wallet Address (Optional)"
-                    value={recipient.aptosAddress}
-                    onChange={(e) => updateRecipient(index, 'aptosAddress', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl focus:border-blue-500 outline-none"
-                    disabled={isProcessing}
-                  />
+
                 </div>
               ))}
               <button
