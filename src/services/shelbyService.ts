@@ -25,7 +25,9 @@ export class ShelbyService {
 
   constructor() {
     // Geomi API key provided by the user
-    const apiKey = process.env.NEXT_PUBLIC_SHELBY_API_KEY;
+    const apiKey = (typeof import.meta !== 'undefined' && import.meta.env) 
+      ? (import.meta.env.VITE_SHELBY_API_KEY || import.meta.env.NEXT_PUBLIC_SHELBY_API_KEY || '')
+      : (process.env.NEXT_PUBLIC_SHELBY_API_KEY || '');
     
     const config = {
       apiKey: apiKey,

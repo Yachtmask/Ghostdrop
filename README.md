@@ -1,41 +1,183 @@
-# GhostDrop: Secure Your Digital Legacy
+<p align="center">
+  <img src="https://img.shields.io/badge/Aptos-Testnet-blue?style=for-the-badge" alt="Aptos Testnet" />
+  <img src="https://img.shields.io/badge/Shelby-Protocol-purple?style=for-the-badge" alt="Shelby Protocol" />
+  <img src="https://img.shields.io/badge/Encryption-AES--256--GCM-green?style=for-the-badge" alt="AES-256-GCM" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License" />
+</p>
 
-Welcome to GhostDrop. This is not just another storage app. It is a decentralized sanctuary built on the Aptos blockchain and the Shelby protocol, designed to ensure that your most sensitive data reaches the right hands even when you are no longer there to deliver it yourself.
+# GhostDrop
 
-In an era where digital assets and private information are often lost in the void of forgotten passwords and centralized silos, GhostDrop provides a deterministic, self-custody solution for the ultimate peace of mind.
+### Powering Digital Sovereignty on Aptos
 
-## The Vision
+---
 
-We believe that your data should be yours forever, and its transition to your loved ones or colleagues should be as secure as it is certain. GhostDrop combines cutting edge AES 256 GCM encryption with a decentralized Dead Man Switch. You set the rules. You provide the heartbeat. If the heartbeat stops, the gates open for those you trust.
+## Overview
 
-## Core Pillars
+**GhostDrop** is a decentralized Dead Man Switch built on the [Aptos](https://aptos.dev/) blockchain with [Shelby Protocol](https://shelby.xyz/) for encrypted blob storage. It enables users to encrypt sensitive data locally and store it verifiably on the Shelby network. If the user becomes inactive for a configured period of time, the encrypted data is automatically released to designated recipients via email.
 
-### Zero Knowledge Security
-Everything starts and ends on your machine. Your files are encrypted locally before they ever touch the network. We never see your keys, your passwords, or your data. You are the only one with the power to grant access.
+> Your heartbeat keeps it secure. Your silence releases it.
 
-### Decentralized Permanence
-By leveraging the Shelby protocol, your encrypted data is distributed across a global network of nodes. It is verifiable, immutable, and always available. We use ShelbyUSD on the Aptos testnet to handle storage operations, ensuring a fast and cost effective experience.
+---
 
-### The Heartbeat Mechanism
-Your dashboard is your command center. By checking in with your Aptos wallet, you signal to the protocol that you are still in control. If a check in is missed beyond your custom interval, the smart switch triggers, and your recipients receive their unique access tokens.
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Zero-Knowledge Encryption** | Files are encrypted locally using AES-256-GCM before upload. Keys never leave your device. |
+| **Decentralized Storage** | Encrypted blobs are stored on the Shelby network — verifiable, immutable, and always available. |
+| **Dead Man Switch** | Configurable inactivity timer triggers automatic data release to recipients. |
+| **Wallet Authentication** | Secure login via Aptos-compatible wallets (Petra). |
+| **Email Notifications** | Recipients are notified via email with decryption access when the switch triggers. |
+| **Check-In Mechanism** | Reset your timer by checking in from your wallet — proving you're still active. |
+| **Vault Management** | Create, monitor, extend, and delete vaults from a unified dashboard. |
+
+---
+
+## Tech Stack
+
+- **Frontend:** React 19, Vite, Tailwind CSS, Framer Motion
+- **Blockchain:** Aptos Testnet (via `@aptos-labs/ts-sdk`)
+- **Storage:** Shelby Protocol Testnet (`@shelby-protocol/sdk`)
+- **Encryption:** Web Crypto API (AES-256-GCM)
+- **Backend:** Express.js with node-cron watchdog
+- **Notifications:** Nodemailer (Gmail), Resend, EmailJS
+- **Wallet:** Petra Wallet Adapter
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     Client (Browser)                      │
+│  ┌──────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │  Encrypt │→ │ Upload Blob  │→ │ Register on Aptos │  │
+│  │  (Local) │  │ (Shelby SDK) │  │ (Wallet Sign)     │  │
+│  └──────────┘  └──────────────┘  └───────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Server (Express.js)                     │
+│  ┌──────────────┐  ┌────────────────┐  ┌─────────────┐  │
+│  │ Watchdog Cron│→ │ Check Timers   │→ │ Send Email  │  │
+│  │ (Every Min)  │  │ (Shelby Fetch) │  │ (Nodemailer)│  │
+│  └──────────────┘  └────────────────┘  └─────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Getting Started
 
-To begin securing your legacy, you will need an Aptos wallet like Petra connected to the Aptos testnet.
+### Prerequisites
 
-1. **Connect Your Wallet**: Use the selector in the top right to link your Aptos account.
-2. **Configure Your Heartbeat**: Visit your settings to set your check in interval and notification email.
-3. **Create a Vault**: Upload any file up to 50MB. Add your recipients and let GhostDrop handle the encryption and decentralized storage.
-4. **Stay Active**: Simply visit the dashboard and hit Check In to reset the timer.
+- Node.js 18+
+- npm or yarn
+- An Aptos-compatible wallet (e.g., [Petra](https://petra.app/))
+- A Shelby API key from [Geomi](https://geomi.dev)
 
-## Pro Tips for the Ultimate Setup
+### Installation
 
-* **Test the Flow**: Set a short one hour interval for your first vault to see exactly how the release and decryption process feels for your recipients.
-* **Multiple Recipients**: You can add an unlimited number of trusted contacts to a single vault. Each one receives a unique, private access token.
-* **ShelbyUSD**: Ensure you have ShelbyUSD testnet tokens to cover the decentralized storage fees. This keeps your data alive on the network.
+```bash
+# Clone the repository
+git clone https://github.com/Yachtmask/Ghostdrop.git
+cd Ghostdrop
 
-## The Future of GhostDrop
+# Install dependencies
+npm install
+```
 
-We are just getting started. Soon, we will be introducing multi signature vaults, on chain legacy messages, and automated inheritance of Aptos digital assets.
+### Environment Variables
 
-GhostDrop is built for those who think ahead. Secure your legacy today.
+Create a `.env.local` file in the project root:
+
+```env
+# Required: Shelby Protocol API Key (get from https://geomi.dev)
+NEXT_PUBLIC_SHELBY_API_KEY=your_shelby_api_key_here
+
+# Optional: Email notification providers
+GMAIL_USER=your_gmail@gmail.com
+GMAIL_APP_PASSWORD=your_app_password
+RESEND_API_KEY=your_resend_key
+
+# Optional: Telegram notifications
+TELEGRAM_BOT_TOKEN=your_bot_token
+
+# Optional: App URL for download links
+APP_URL=http://localhost:3000
+```
+
+### Run Locally
+
+```bash
+# Development mode (with hot reload)
+npm run dev
+
+# Production build
+npm run build
+npm run preview
+```
+
+The app will be available at `http://localhost:3000`.
+
+---
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub.
+2. Import the repository in [Vercel](https://vercel.com).
+3. Add the environment variable `NEXT_PUBLIC_SHELBY_API_KEY` in **Settings → Environment Variables**:
+   - **Key:** `NEXT_PUBLIC_SHELBY_API_KEY`
+   - **Value:** Your API key from Geomi
+4. Deploy.
+
+> **Note:** The backend watchdog server (`server.ts`) requires a persistent Node.js runtime and cannot run on Vercel's serverless platform. For production use, deploy the server separately on a VPS or use a service like Railway/Render.
+
+---
+
+## How It Works
+
+1. **Connect Wallet** — Authenticate with your Aptos wallet.
+2. **Create a Vault** — Upload a file, set a timer duration, add recipient emails, and provide a passphrase.
+3. **Encryption** — The file is encrypted locally with AES-256-GCM. The key is derived and packaged for each recipient.
+4. **Upload** — The encrypted blob and metadata are uploaded to the Shelby network and registered on Aptos.
+5. **Watchdog** — A background cron job monitors vault timers. If your check-in expires, recipients are notified.
+6. **Check-In** — Visit your dashboard and check in to reset the timer and prove activity.
+7. **Release** — If the timer expires, recipients receive an email with a download link and decryption passphrase.
+
+---
+
+## Live Demo
+
+**[https://ghostdrop-nine.vercel.app](https://ghostdrop-nine.vercel.app)**
+
+---
+
+## Security Considerations
+
+- All encryption happens client-side — keys never leave the browser.
+- Passphrases are stored server-side only for auto-release functionality.
+- The watchdog server should be deployed in a secure, trusted environment.
+- Always use app-specific passwords for Gmail integration.
+- API keys should be stored as environment variables, never hardcoded.
+
+---
+
+## Contributing
+
+Contributions are welcome. Please open an issue first to discuss proposed changes.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  <strong>GhostDrop</strong> — Secure your legacy. Built for those who think ahead.
+</p>

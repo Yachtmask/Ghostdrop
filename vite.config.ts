@@ -19,6 +19,9 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    'process.env.NEXT_PUBLIC_SHELBY_API_KEY': JSON.stringify(process.env.NEXT_PUBLIC_SHELBY_API_KEY || ''),
+  },
   optimizeDeps: {
     exclude: ['@shelby-protocol/sdk'],
     include: ['poseidon-lite', '@aptos-labs/ts-sdk', '@shelby-protocol/clay-codes'],

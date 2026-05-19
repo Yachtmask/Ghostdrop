@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 
 const shelbyClient = new ShelbyClient({ 
   network: Network.TESTNET,
-  apiKey: process.env.NEXT_PUBLIC_SHELBY_API_KEY || ''
+  apiKey: import.meta.env.VITE_SHELBY_API_KEY || import.meta.env.NEXT_PUBLIC_SHELBY_API_KEY || ''
 });
 
 // Simple ErrorBoundary component
